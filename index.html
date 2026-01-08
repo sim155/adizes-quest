@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>שאלון אדיג'ס</title>
+<style>
+:root{
+ --primary:#323B58;
+ --secondary:#7C9AA3;
+ --accent:#6F3857;
+ --bg:#F0E4E6;
+ --neutral:#DFDFE1;
+ --text:#333;
+}
+body{font-family:Arial,sans-serif;margin:0;background:var(--bg);color:var(--text)}
+header{background:var(--primary);color:#fff;padding:18px 20px}
+main{max-width:1050px;margin:0 auto;padding:20px 14px 70px}
+.card{background:#fff;border-radius:14px;padding:16px;margin:14px 0;box-shadow:0 2px 10px rgba(0,0,0,.06)}
+.hint{font-size:.95em;line-height:1.7;color:var(--primary)}
+.qtitle{font-weight:900;margin-bottom:8px;color:var(--accent)}
+.qnum{display:inline-flex;align-items:center;justify-content:center;width:28px;height:28px;border-radius:50%;background:var(--accent);color:#fff;font-weight:800;margin-left:8px}
+.stmt{padding:12px;background:#f8f8f9;border:1px solid var(--neutral);border-radius:12px;margin:10px 0}
+.stmt-text{color:#555}
+.radioRow{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px}
+.radioOpt{display:flex;align-items:center;gap:6px;background:#fff;border:1px solid var(--neutral);border-radius:999px;padding:6px 12px}
+.radioOpt input{transform:scale(1.1);accent-color:var(--primary)}
+.radioOpt:has(input:checked){background:var(--primary);border-color:var(--primary);color:#fff}
+.qreset{margin-top:10px;background:transparent;border:1px dashed var(--secondary);color:var(--secondary);padding:6px 12px;border-radius:10px;font-size:.85em;cursor:pointer}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:14px}
+button{padding:10px 16px;border-radius:12px;border:0;cursor:pointer;font-weight:800}
+button.primary{background:var(--primary);color:#fff}
+button.secondary{background:var(--secondary);color:#fff}
+button.ghost{background:transparent;border:1px solid var(--secondary);color:var(--secondary)}
+button.disabled{opacity:.55;cursor:not-allowed}
+.error{color:var(--accent);font-weight:800;display:none;margin-top:10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:780px){.grid{grid-template-columns:1fr}}
+.barwrap{background:var(--neutral);border-radius:999px;overflow:hidden;height:14px;margin-top:6px}
+.bar{height:14px;width:0%;background:var(--accent)}
+.kpi{display:flex;justify-content:space-between;gap:10px;color:var(--primary)}
+.badge{display:inline-block;background:var(--neutral);border-radius:999px;padding:4px 10px;font-weight:800}
+.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace}
+</style>
+</head>
+<body>
+<header>
+  <div style="max-width:1050px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;">
+    <div style="font-size:1.25em;font-weight:900;">שאלון אדיג'ס</div>
+    <button id="resetAllHeader" style="background:transparent;border:1px solid rgba(255,255,255,.6);color:#fff;padding:6px 12px;border-radius:10px;font-weight:700;cursor:pointer">
+      איפוס מלא
+    </button>
+  </div>
+</header>
+
+<main>
+<section class="card">
+  <p class="hint">
+    לפניך 20 אמירות המתייחסות לדרך הפעולה שלך בעבודה.<br>
+    למול כל אמירה נמצאים 4 אפיונים.<br>
+    עליך לשקול את מידת התאמתם לך ולסמן את הספרות 2 , 4 , 8 או 1 לפי מידת ההתאמה:
+  </p>
+  <p class="hint">
+    הענק/י 8 נקודות לאפיון שהכי יהלום אותך.<br>
+    הענק/י 4 נקודות כאשר האפיון מתאים לפעמים.<br>
+    הענק/י 2 נקודות כאשר האפיון מתאים מעט מאוד.<br>
+    הענק/י 1 נקודה כאשר האפיון הכי פחות מתאים לך.
+  </p>
+  <p class="hint">
+    בכל שורה עליך לשבץ את הערכים 8 , 4 , 2 ו־1.<br>
+    <b>שים לב:</b> תשובותיך צריכות לשקף איך את/ה נוהג/ת במקרים אלה ולא מה שאת/ה חושב/ת שנכון או צריך לעשות.
+  </p>
+</section>
+
+<div id="questions"></div>
+
+<section class="card">
+ <div class="actions">
+    <button class="primary" id="finish">סיום</button>
+  <button class="primary disabled" id="showResults" disabled>הצגת תוצאות</button>
+  <button class="ghost disabled" id="emailBtn" disabled>שליחת תוצאות במייל</button>
+  <button class="ghost disabled" id="editBtn" disabled>חזרה לעריכה</button>
+  <button class="secondary disabled" id="learnMoreBtn" disabled>למד/י עוד</button>
+ </div>
+ <div id="globalErr" class="error"></div>
+</section>
+
+<section class="card" id="resultsCard" style="display:none;">
+  <div class="qtitle" style="color:var(--primary);">תוצאות אישיות</div>
+  <div id="results"></div>
+</section>
+
+
+<section class="card" id="learnMoreCard" style="display:none;">
+  <div class="qtitle" style="color:var(--primary);">למד/י עוד על סגנונות PAEI</div>
+  <ul style="margin:0 18px 0 0; padding:0; line-height:1.7; color:#555;">
+    <li><b>P – ביצוע ותוצאות:</b> דחיפה קדימה, מיקוד בתוצאה וסגירה. <b>בקיצון:</b> לחץ וחוסר סבלנות.</li>
+    <li><b>A – סדר ותהליך:</b> תכנון, יציבות, סטנדרטים ואיכות. <b>בקיצון:</b> נוקשות ועודף נהלים.</li>
+    <li><b>E – יזמות וחדשנות:</b> חזון, שינוי, רעיונות חדשים. <b>בקיצון:</b> פיזור וקושי בהתמדה.</li>
+    <li><b>I – אנשים וחיבור:</b> אמון, שיתוף פעולה, לכידות. <b>בקיצון:</b> הימנעות מקונפליקט וריכוך החלטות.</li>
+  </ul>
+</section>
+
+</main>
+
+<script>
+const VALUES=[8,4,2,1];
+
+// 20 questions, 4 statements each. Column order is P A E I (right-to-left in the original sheet).
+const QUESTIONS=[["מטרתי העיקרית היא",["להיות במשרה עם השפעה","להרגיש ביטחון במקום עבודתי","שיהיה לי מעניין","להנות בחברת האנשים עימם אני עובד/ת"]],
+["אני נהנה/ת מעבודות",["\"דינמיות\" / עבודת שטח","ברורות ומוגדרות","המאפשרות פעולה עצמאית","שאנשים מעורבים בהן"]],
+["אני מצפה מאנשים שעובדים עבורי/י להיות",["יעילים ומהירים","אחראים ויסודיים","בעלי יוזמה לרעיונות והצעות","בעלי יחסי אנוש גבוהים"]],
+["בעבודתי אני מצפה להשיג",["תוצאות מעשיות","את הפתרונות הטובים ביותר","גישות חדשות או רעיונות חדשים","אווירה טובה"]],
+["דרך ההתקשרות הטובה ביותר שלי היא",["שיחות קצרות","בכתיבה","בקשר ישיר אחד על אחד","בשיחה קבוצתית"]],
+["בעבודתי אני מדגיש/ה",["פתרון בעיות כאן ועכשיו","עמידה ביעדים","מטרות לעתיד","טיפוח קריירה של אנשים"]],
+["בהתמודדות עם בעיה אני",["מסתמך/ת על גישות שהוכיחו את עצמן","מנתח/ת ובוחן/ת נתונים","מחפש/ת גישות יצירתיות","מתייעץ/ת"]],
+["אני עלול/ה לאבד את סבלנותי מול",["אנשים איטיים ולא מקצועיים","אנשים לא ממוקדים, מתפזרים","אנשים שמרניים","אנשים תוקפניים"]],
+["כאשר איני בטוח/ה מה לעשות אני",["חותך/ת ומקבל/ת החלטה","משתהה לפני שמקבל/ת החלטה","מסתמך/ת על אינטואיציה","חושב/ת על פשרה אפשרית"]],
+["אני משתדל/ת להימנע מ..",["דיונים ארוכים ושיחות נפש","לא לגמור עבודה","שימוש במספרים ונוסחאות","קונפליקט עם אחרים"]],
+["אני טוב/ה במיוחד ב...",["פתרון בעיות בשטח","תכנון","חשיבה יצירתית","קשרים בינאישיים"]],
+["כאשר זמן הוא גורם חשוב אני",["מחליט/ה ופועל/ת במהירות","משתמש/ת בתוכניות וסדר עדיפויות","מסרב/ת להילחץ","מחפש/ת הדרכה ותמיכה"]],
+["במצבים חברתיים אני בדרך כלל",["בולט/ת, מדבר/ת עם אחרים","חושב/ת על מה שנאמר ומנתח/ת","מתבונן/ת במתרחש סביב","מקשיב/ה"]],
+["חשוב לי",["להיות יעיל/ה","להיות מסודר/ת","להיות חדשני/ת","להיות חברותי/ת"]],
+["העבודה שאני עושה מאפשרת לי",["כוח להשפיע על אחרים","לבנות תשתיות וכלים","להשיג את מטרותיי האישיות","להיות מקובל/ת על ידי הקבוצה"]],
+["אני מסתדר/ת טוב עם אנשים שהינם",["בעלי מרץ ותחרותיים","שקולים ויציבים","בעלי ראש פתוח","נחמדים ונותני אמון"]],
+["במצבי עימות אני נוטה",["לעמוד על העמדה שלי","לנתח מה גרם למצב","לחפש פתרונות יצירתיים","לצאת מהעימות"]],
+["אחרים חושבים שאני",["הישגי/ת, שאפתן/ית","בעל/ת משמעת עצמית","בעל/ת דמיון","תומך/ת ועוזר/ת"]],
+["ההחלטות שלי בדרך כלל",["מציאותיות וישירות","שיטתיות ומאורגנות","כוללניות וגמישות","רגישות לצרכי אחרים"]],
+["אינני אוהב/ת",["איבוד שליטה/כיוון","עבודה בקפיצות מנושא לנושא","לציית ולעקוב אחרי חוקים וכללים","להיות דחוי/ה"]]];
+
+let isFinished=false;
+
+// answers: 20 x 4 (values)
+const state = Array.from({length:20},()=>[null,null,null,null]);
+
+const qDiv=document.getElementById("questions");
+const globalErr=document.getElementById("globalErr");
+const resultsCard=document.getElementById("resultsCard");
+const resultsDiv=document.getElementById("results");
+
+const btnResetAll=document.getElementById("resetAllHeader");
+const btnFinish=document.getElementById("finish");
+const btnShowResults=document.getElementById("showResults");
+const btnEmail=document.getElementById("emailBtn");
+const btnEdit=document.getElementById("editBtn");
+const btnLearnMore=document.getElementById("learnMoreBtn");
+const learnMoreCard=document.getElementById("learnMoreCard");
+
+function setDisabled(btn, disabled){
+  btn.disabled=disabled;
+  btn.classList.toggle("disabled", disabled);
+}
+
+function render(){
+  qDiv.innerHTML="";
+  QUESTIONS.forEach((q,i)=>{
+    const card=document.createElement("section");
+    card.className="card";
+    card.innerHTML=`<div class="qtitle"><span class="qnum">${i+1}</span>${q[0]}</div>`;
+    q[1].forEach((txt,idx)=>{
+      const s=document.createElement("div");
+      s.className="stmt";
+      s.innerHTML=`<div class="stmt-text">${txt}</div>`;
+      const r=document.createElement("div");
+      r.className="radioRow";
+      VALUES.forEach(v=>{
+        const l=document.createElement("label");
+        l.className="radioOpt";
+        const inp=document.createElement("input");
+        inp.type="radio";
+        inp.name=`q${i}_${idx}`;
+        inp.checked = (state[i][idx]===v);
+        inp.disabled = isFinished; // lock after finish
+        inp.onchange=()=>{
+          const prev=state[i].indexOf(v);
+          if(prev!==-1 && prev!==idx) state[i][prev]=null; // move value
+          state[i][idx]=v;
+          hideError();
+          render();
+        };
+        l.appendChild(inp);
+        l.appendChild(document.createTextNode(v));
+        r.appendChild(l);
+      });
+      s.appendChild(r);
+      card.appendChild(s);
+    });
+    const rb=document.createElement("button");
+    rb.className="qreset";
+    rb.type="button";
+    rb.textContent="איפוס שאלה";
+    rb.disabled=isFinished;
+    rb.onclick=()=>{state[i]=[null,null,null,null]; hideError(); render();};
+    card.appendChild(rb);
+
+    qDiv.appendChild(card);
+  });
+}
+
+function hideError(){
+  globalErr.style.display="none";
+  globalErr.textContent="";
+}
+
+function isComplete(){
+  // each question must have 4 unique assigned values
+  for(const a of state){
+    if(a.some(v=>v==null)) return false;
+    if(new Set(a).size!==4) return false;
+  }
+  return true;
+}
+
+function scoreTotals(){
+  // Column mapping: 0=P, 1=A, 2=E, 3=I
+  const t={P:0,A:0,E:0,I:0};
+  for(const a of state){
+    t.P+=a[0]; t.A+=a[1]; t.E+=a[2]; t.I+=a[3];
+  }
+  return t;
+}
+
+// Ranges copied from your workshop handout (SodaLead), page "ריכוז תוצאות לשאלון אדיג'ס":
+// P: 20-67 less preferred, 68-81 secondary, 82-89 primary, 90-160 very primary
+// A: 54-85 less preferred, 86-96 secondary, 97-104 primary, 105-160 very primary (handout shows slight overlap; we use non-overlapping buckets)
+// E: 20-72 less preferred, 73-86 secondary, 87-94 primary, 95-160 very primary
+// I: 20-47 less preferred, 48-61 secondary, 62-69 primary, 70-160 very primary
+function bucket(letter, score){
+  if(letter==="P"){
+    if(score>=90) return "עיקרי מאוד";
+    if(score>=82) return "עיקרי";
+    if(score>=68) return "משני";
+    return "פחות מועדף";
+  }
+  if(letter==="A"){
+    if(score>=105) return "עיקרי מאוד";
+    if(score>=97) return "עיקרי";
+    if(score>=86) return "משני";
+    return "פחות מועדף";
+  }
+  if(letter==="E"){
+    if(score>=95) return "עיקרי מאוד";
+    if(score>=87) return "עיקרי";
+    if(score>=73) return "משני";
+    return "פחות מועדף";
+  }
+  // I
+  if(score>=70) return "עיקרי מאוד";
+  if(score>=62) return "עיקרי";
+  if(score>=48) return "משני";
+  return "פחות מועדף";
+}
+
+function profileLetters(totals){
+  // Uppercase for "עיקרי מאוד" / "עיקרי", lowercase for "משני" / "פחות מועדף"
+  const order=["P","A","E","I"];
+  let prof="";
+  for(const k of order){
+    const b=bucket(k, totals[k]);
+    const ch = (b==="עיקרי מאוד" || b==="עיקרי") ? k : k.toLowerCase();
+    prof += ch;
+  }
+  return prof;
+}
+
+function renderResults(){
+  const t=scoreTotals();
+  const prof=profileLetters(t);
+  const labels={P:"P — ביצוע/תוצאות",A:"A — תהליך/סדר",E:"E — יזמות/חדשנות",I:"I — אנשים/חיבור"};
+
+  const max=Math.max(...Object.values(t));
+  const pct=v=>Math.round((v/max)*100);
+
+  const rows=["P","A","E","I"].map(k=>{
+    const b=bucket(k,t[k]);
+    return `
+      <div>
+        <div class="kpi"><b>${labels[k]}</b><span><span class="badge">${b}</span> <b>${t[k]}</b></span></div>
+        <div class="barwrap"><div class="bar" style="width:${pct(t[k])}%"></div></div>
+      </div>`;
+  }).join("");
+
+  resultsDiv.innerHTML = `
+    <div style="margin-bottom:10px;">
+      <div><b>פרופיל:</b> <span class="mono" style="font-size:1.15em;">${prof}</span></div>
+      <div class="hint" style="margin-top:6px;">
+        אות גדולה = עיקרי/עיקרי מאוד • אות קטנה = משני/פחות מועדף
+      </div>
+    </div>
+    <div class="grid">${rows}</div>
+  `;
+  resultsCard.style.display="block";
+}
+
+function buildMailto(){
+  const t=scoreTotals();
+  const prof=profileLetters(t);
+
+  const bodyLines = [
+    "תוצאות שאלון אדיג'ס",
+    "",
+    `פרופיל: ${prof}`,
+    "",
+    `P: ${t.P} (${bucket("P",t.P)})`,
+    `A: ${t.A} (${bucket("A",t.A)})`,
+    `E: ${t.E} (${bucket("E",t.E)})`,
+    `I: ${t.I} (${bucket("I",t.I)})`,
+    "",
+    "נשלח מהשאלון הדיגיטלי."
+  ];
+  const subject = encodeURIComponent("תוצאות שאלון אדיג'ס");
+  const body = encodeURIComponent(bodyLines.join("\n"));
+  return `mailto:?subject=${subject}&body=${body}`;
+}
+
+// Buttons
+btnResetAll.onclick=()=>{
+  if(!confirm("איפוס מלא ימחק את כל התשובות. להמשיך?")) return;
+  if(isFinished) return;
+  for(let i=0;i<20;i++) state[i]=[null,null,null,null];
+  hideError();
+  resultsCard.style.display="none";
+  learnMoreCard.style.display="none";
+  setDisabled(btnLearnMore,true);
+  render();
+};
+
+btnFinish.onclick=()=>{
+  resultsCard.style.display="none";
+  if(!isComplete()){
+    globalErr.style.display="block";
+    globalErr.textContent="לא ניתן לסיים — יש שאלות שלא הושלמו.";
+    return;
+  }
+  hideError();
+  isFinished=true;
+  setDisabled(btnFinish,true);
+  setDisabled(btnResetAll,true);
+  setDisabled(btnShowResults,false);
+  setDisabled(btnEmail,false);
+  setDisabled(btnEdit,false);
+  render();
+};
+
+btnShowResults.onclick=()=>{
+  renderResults();
+  setDisabled(btnLearnMore,false);
+};
+
+btnEmail.onclick=()=>{
+  // Opens user's email client with prefilled subject/body. User can choose recipient and send.
+  window.location.href = buildMailto();
+};
+
+btnEdit.onclick=()=>{
+  isFinished=false;
+  setDisabled(btnFinish,false);
+  setDisabled(btnResetAll,false);
+  setDisabled(btnShowResults,true);
+  setDisabled(btnEmail,true);
+  setDisabled(btnEdit,true);
+  setDisabled(btnLearnMore,true);
+  learnMoreCard.style.display="none";
+  resultsCard.style.display="none";
+  hideError();
+  render();
+};
+
+btnLearnMore.onclick=()=>{
+  learnMoreCard.style.display = (learnMoreCard.style.display==="none") ? "block" : "none";
+};
+
+render();
+</script>
+</body>
+</html>
